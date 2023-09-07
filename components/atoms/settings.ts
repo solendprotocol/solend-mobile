@@ -20,22 +20,18 @@ export const refreshPageAtom = atom(
 );
 
 export const connectionAtom = atom<Connection>((get) => {
-    console.log('prerpc');
   const rpc = get(selectedRpcAtom);
-  console.log('rpc:',rpc);
   return new Connection(rpc.endpoint, 'confirmed');
 });
 
 export const switchboardAtom = atom(async (get) => {
   const connection = get(connectionAtom);
-  console.log('load sb');
   try {
     await SwitchboardProgram.loadMainnet(connection);
-  } catch(e) {
+  } catch(e: any) {
     console.log('error');
     console.log(e.stack);
     console.log('end error');
   }
-  console.log('loaded sb');
   return SwitchboardProgram.loadMainnet(connection);
 });

@@ -15,8 +15,9 @@ import React from 'react';
 import {RPC_ENDPOINT} from './ConnectionProvider';
 import { useAtom, useSetAtom } from 'jotai';
 import { setPublicKeyAtom } from '../atoms/wallet';
-import { loadPoolsAtom, poolsAtom, selectedPoolAddressAtom, selectedPoolAtom } from '../atoms/pools';
+import { loadPoolsAtom, poolsAtom, selectedPoolAddressAtom, selectedPoolAtom, unqiueAssetsAtom } from '../atoms/pools';
 import { configAtom } from '../atoms/config';
+import { loadMetadataAtom } from '../atoms/metadata';
 
 export type Account = Readonly<{
   address: Base64EncodedAddress;
@@ -102,6 +103,8 @@ function AuthorizationProvider(props: {children: ReactNode}) {
   const setPools = useSetAtom(poolsAtom);
   const [config] = useAtom(configAtom);
   const loadPools = useSetAtom(loadPoolsAtom);
+  const [unqiueAssets] = useAtom(unqiueAssetsAtom);
+  const loadMetadata = useSetAtom(loadMetadataAtom);
   const [authorization, setAuthorization] = useState<Authorization | null>(
     null,
   );
@@ -127,6 +130,12 @@ function AuthorizationProvider(props: {children: ReactNode}) {
     ));
     loadPools();
   }, [])
+
+  useEffect(() => {
+    if (unqiueAssets.length > 0) {
+      loadMetadata();
+    }
+  }, [unqiueAssets.length]);
 
   const handleAuthorizationResult = useCallback(
     async (

@@ -1,55 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  ImageBackground,
-  StyleSheet,
+  Image,
+  Pressable,
   Text,
+  TouchableOpacity,
   useColorScheme,
   View,
 } from 'react-native';
-import {Colors} from './Colors';
+import ConnectButton from './ConnectButton';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import colors from '../colors';
+import { PoolsModal } from './PoolsModal';
 
 export function Header() {
-  const isDarkMode = useColorScheme() === 'dark';
+  const [isPoolsModalOpen, setIsPoolsModalOpen] = useState<boolean>(false);
   return (
-    <ImageBackground
-      accessibilityRole="image"
-      testID="new-app-screen-header"
-      source={require('../img/background.png')}
-      style={[
-        styles.background,
-        {
-          backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-        },
-      ]}
-      imageStyle={styles.logo}>
-      <View>
-        <Text style={styles.title}>Solend Mobile</Text>
-        <Text style={styles.subtitle}>Decentralized lending</Text>
+    <>
+    <PoolsModal visible={isPoolsModalOpen} setVisible={setIsPoolsModalOpen}/>
+      <View className="p-2 border-b-2 border-line bg-neutral flex flex-row justify-between align-center">
+    <View className='flex flex-row justify-between items-center'><TouchableOpacity onPress={() => setIsPoolsModalOpen(true)} className='flex justify-center'><Icon name="menu" size={32} color={colors.primary}/></TouchableOpacity>
+      <Image
+        className='h-12 w-24'
+        source={require('../assets/logo.dark.png')}
+      />
       </View>
-    </ImageBackground>
+        <ConnectButton
+          title="Connect wallet"
+        />
+      </View>
+      </>
   );
 }
-
-const styles = StyleSheet.create({
-  background: {
-    paddingBottom: 40,
-    paddingTop: 60,
-    paddingHorizontal: 32,
-  },
-  logo: {
-    overflow: 'visible',
-    resizeMode: 'cover',
-  },
-  subtitle: {
-    color: '#333',
-    fontSize: 24,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  title: {
-    color: '#fff',
-    fontSize: 40,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-});

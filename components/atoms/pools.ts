@@ -54,17 +54,11 @@ export const loadPoolsAtom = atom(
     get(poolsAtom);
   },
   async (get, set) => {
-    console.log(9999);
     const connection = get(connectionAtom);
-    console.log(">>>>1");
     const pools = get(poolsAtom);
-    console.log(">>>>2");
     const switchboardProgram = await get(switchboardAtom);
-    console.log(">>>>3");
     const currentSlot = await get(currentSlotAtom);
-    console.log(">>>>4");
 
-    console.log(123, pools);
 
     set(
       poolsAtom,
@@ -160,7 +154,6 @@ export const selectedPoolAtom = atom(
     if (!selectedPoolAddress) return null;
     const metadata = get(metadataAtom);
     const selectedPool = get(poolsFamily(selectedPoolAddress));
-    console.log(selectedPoolAddress, selectedPool);
     if (!selectedPool) return null;
     return {
       ...selectedPool,

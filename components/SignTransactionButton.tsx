@@ -25,22 +25,26 @@ export default function SignTransactionButton() {
 
   const signTransaction = useCallback(async () => {
     if (!publicKey || !selectedPool) return;
-    return await transact(async (wallet: Web3MobileWallet) => {
+    return transact(async (wallet: Web3MobileWallet) => {
       // Construct a transaction. This transaction uses web3.js `SystemProgram`
       // to create a transfer that sends lamports to randomly generated address.
+      const [authorizationResult, latestBlockhash] = await Promise.all([
+        authorizeSession(wallet),
+        connection.getLatestBlockhash(),
+      ]);
       const solendAction = await SolendActionCore.buildDepositTxns(
         selectedPool,
-        selectedPool.reserves.find(r => r.symbol === 'SOL')!,
+        selectedPool.reserves.find(r => r.mintAddress === 'So11111111111111111111111111111111111111112')!,
         connection,
         '1000',
-        new PublicKey(publicKey),
+        authorizationResult.publicKey,
       );
   
 
     const lendingTxn = new Transaction({
-      feePayer: new PublicKey(publicKey),
-      recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
-    }).add(...solendAction.lendingIxs);
+      feePayer: authorizationResult.publicKey,
+      recentBlockhash: latestBlockhash.blockhash,
+    }).add(...solendAction.setupIxs, ...solendAction.preTxnIxs, ...solendAction.lendingIxs, ...solendAction.postTxnIxs, ...solendAction.cleanupIxs);
 
       // Sign a transaction and receive
       const signedTransactions = await wallet.signTransactions({
@@ -48,7 +52,7 @@ export default function SignTransactionButton() {
       });
 
       return signedTransactions[0];
-    });
+    }).catch(e => console.log('sign error', e));
   }, [authorizeSession, connection]);
 
   return (
