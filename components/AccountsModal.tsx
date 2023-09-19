@@ -1,4 +1,5 @@
 import React from 'react';
+import BigNumber from 'bignumber.js';
 import {
     Dimensions,
   FlatList,
@@ -10,13 +11,13 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import ConnectButton from './ConnectButton';
+import Clipboard from '@react-native-clipboard/clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import colors from '../colors';
 import Modal from 'react-native-modal/dist/modal';
 import Typography from './Typography';
 import { useAtom, useSetAtom } from 'jotai';
-import { poolsAtom, poolsWithMetaDataAtom, ReserveWithMetadataType, selectedPoolAddressAtom } from './atoms/pools';
+import { poolsAtom, poolsWithMetaDataAtom, ReserveWithMetadataType, selectedPoolAddressAtom, selectedPoolAtom } from './atoms/pools';
 import { formatAddress } from '@solendprotocol/solend-sdk';
 import { selectedObligationAtom } from './atoms/obligations';
 import { formatToken, formatUsd } from '../util/numberFormatter';
@@ -26,41 +27,47 @@ import SolendButton from './Button';
 import { publicKeyAtom, walletAssetsAtom } from './atoms/wallet';
 import { useAuthorization } from './providers/AuthorizationProvider';
 import { transact } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+import { alertAndLog } from '../util/alertAndLog';
 
-export function AccountsModal({visible, setVisible}: {visible: boolean, setVisible: (arg: boolean) => void}) {
-    const windowWidth = Dimensions.get('window').width;
-    const [pools] = useAtom(poolsWithMetaDataAtom);
+export function AccountsModal({navigation} : {navigation: any}) {
     const [walletAssets] = useAtom(walletAssetsAtom);
     const [publicKey] = useAtom(publicKeyAtom);
-    const {deauthorizeSession} = useAuthorization();
-    const setSelectedPoolAddress = useSetAtom(selectedPoolAddressAtom);
+    const [selectedPool] = useAtom(selectedPoolAtom);
+    const {deauthorizeSession, connect} = useAuthorization();
     const [selectedObligation, setSelectedObligation] = useAtom(
       selectedObligationAtom,
     );
 
+    const walletContents = walletAssets.filter(
+      (asset) =>
+        selectedPool?.reserves
+          .map((reserve) => reserve.mintAddress)
+          .includes(asset.mintAddress) && !asset.amount.isZero(),
+    );
+
+    if (!publicKey) {
+      return <View style={{...styles.bottomSheet, justifyContent: 'center'}} className='p-2'>
+        <SolendButton buttonStyle='tag' onPress={() => connect()}>
+        <Typography level='caption'><Icon
+          name='account-balance-wallet'
+          size={8}
+        />{' '}Connect wallet</Typography>
+      </SolendButton>
+      </View>
+    }
+
   return (
-      
-
-<Modal
-// We use the state here to toggle visibility of Bottom Sheet 
-  isVisible={visible}
-  animationIn='slideInRight'
-  animationOut='slideOutRight'
-// We pass our function as default function to close the Modal
-onBackdropPress={() => setVisible(false)}
-onBackButtonPress={() => setVisible(false)} 
-avoidKeyboard
-style={{
-  margin: 0
-}}
->
-
-    <View style={[styles.bottomSheet, { width: windowWidth * 0.8}]} className='p-2'>
+    <View style={styles.bottomSheet} className='p-2'>
     <Typography level='headline'>
         Account ({formatAddress(publicKey ?? '')})
     </Typography>
     <View className='flex w-full flex-row mt-2 justify-between'>
-      <SolendButton buttonStyle='tag'>
+      <SolendButton buttonStyle='tag' onPress={() => {
+        if (publicKey) {
+          Clipboard.setString(publicKey)
+          alertAndLog('Address copied!', publicKey)
+        }
+      }}>
         <Typography level='caption'><Icon
           name='content-copy'
           size={8}
@@ -70,7 +77,7 @@ style={{
         transact(async wallet => {
           await deauthorizeSession(wallet);
         });
-        setVisible(false);
+        navigation.closeDrawer();
         }}>
         <Typography level='caption' 
         ><Icon
@@ -125,7 +132,7 @@ style={{
   {selectedObligation?.deposits.map((position) => (
               <View
                 key={position.reserveAddress}
-                className='flex flex-row justify-between w-full'
+                className='flex flex-row justify-between w-full py-1'
               >
                 <View>
                   <Typography>{position.symbol ?? 'Loading...'}</Typography>
@@ -150,7 +157,7 @@ style={{
   {selectedObligation?.borrows.map((position) => (
               <View
                 key={position.reserveAddress}
-                className='flex flex-row justify-between w-full'
+                className='flex flex-row justify-between w-full py-1'
               >
                 <View>
                   <Typography>{position.symbol ?? 'Loading...'}</Typography>
@@ -170,20 +177,40 @@ style={{
                 <Typography level='caption' color='secondary'>Wallet assets</Typography>
                 <Typography level='caption' color='secondary'>Asset balance</Typography>
               </View>
+              {walletContents.map((mint) => {
+            const price =
+              selectedPool?.reserves.find(
+                (r) => r.mintAddress === mint.mintAddress,
+              )?.price ?? new BigNumber(0);
+            return (
+              <View
+                key={mint.mintAddress}
+                className='flex flex-row justify-between w-full py-1'
+              >
+                <View>
+                  <Typography>{mint.symbol}</Typography>
+                  <Typography color='secondary' level='label'>
+                    {formatUsd(price.toString())}
+                  </Typography>
+                </View>
+                <View>
+                  <Typography textClassName='text-right'>{formatToken(mint.amount.toString())}{' '}{mint.symbol}</Typography>
+                  <Typography color='secondary' level='label' textClassName='text-right'>
+                    {formatUsd(price.times(mint.amount).toString())}
+                  </Typography>
+                </View>
+              </View>
+            );
+          })}
   </View>
-  
-</Modal>
   );
 }
 
 const styles = StyleSheet.create({
   bottomSheet: {
-      position: 'absolute',
-      right: 0,
       justifyContent: 'flex-start',
       alignItems: 'center',
       backgroundColor: colors.neutral,
-      top: 0,
-      bottom: 0,
+      height: '100%'
   },
 });

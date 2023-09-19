@@ -34,43 +34,32 @@ function PoolRow({ reserves }: { reserves: Array<ReserveWithMetadataType> }) {
       {shownIcons
         .map((reserve) => (
             reserve.logo ? <Image
+            key={reserve.address}
             className='h-4 w-4 overflow-hidden rounded-full mr-[-6px] bg-line'
             source={{uri: reserve.logo}}
-          /> : <View className='h-4 w-4 overflow-hidden rounded-full mr-[-6px] bg-line flex items-center justify-center'>
+          /> : <View key={reserve.address} className='h-4 w-4 overflow-hidden rounded-full mr-[-6px] bg-line flex items-center justify-center'>
               <Typography level='disclosure' color='secondary'>{reserve.address[0]}</Typography>
           </View>
         )).concat(
-            <View className='h-4 w-4 overflow-hidden rounded-full mr-[-6px] bg-line flex items-center justify-center'>
+          extraIcons.length > 1 ? <View key='extra' className='h-4 w-4 overflow-hidden rounded-full mr-[-6px] bg-line flex items-center justify-center'>
                 <Typography level='disclosure' color='secondary'>+{extraIcons.length}</Typography>
-            </View>
+            </View> : extraIcons.length === 1 ? (extraIcons[0].logo ? <Image
+            className='h-4 w-4 overflow-hidden rounded-full mr-[-6px] bg-line'
+            source={{uri: extraIcons[0].logo}}
+          /> : <View key='extra' className='h-4 w-4 overflow-hidden rounded-full mr-[-6px] bg-line flex items-center justify-center'>
+              <Typography level='disclosure' color='secondary'>{extraIcons[0].address[0]}</Typography>
+          </View>) : <View key='extra'/>
         )}
     </View>
   );
 }
 
-export function PoolsModal({visible, setVisible}: {visible: boolean, setVisible: (arg: boolean) => void}) {
-    const windowWidth = Dimensions.get('window').width;
+export function PoolsModal({navigation} : {navigation: any}) {
     const [pools] = useAtom(poolsWithMetaDataAtom);
     const setSelectedPoolAddress = useSetAtom(selectedPoolAddressAtom);
 
   return (
-      
-
-<Modal
-// We use the state here to toggle visibility of Bottom Sheet 
-  isVisible={visible}
-  animationIn='slideInLeft'
-  animationOut='slideOutLeft'
-// We pass our function as default function to close the Modal
-onBackdropPress={() => setVisible(false)}
-onBackButtonPress={() => setVisible(false)} 
-avoidKeyboard
-style={{
-  margin: 0
-}}
->
-
-    <View style={[styles.bottomSheet, { width: windowWidth * 0.6 }]} className='pt-2'>
+    <View style={styles.bottomSheet} className='pt-2'>
     <Typography level='headline'>
         Pools
     </Typography>
@@ -79,7 +68,7 @@ style={{
         data={Object.values(pools)}
         renderItem={(pool) => <Pressable onPress={() => {
             setSelectedPoolAddress(pool.item.address);
-            setVisible(false);
+            navigation.closeDrawer();
             }} className='flex border-b border-line p-2 w-full'>
             <Typography>
                 {pool.item.name ?? formatAddress(pool.item.address)}
@@ -88,18 +77,13 @@ style={{
         </Pressable>}
     />
   </View>
-</Modal>
   );
 }
 
 const styles = StyleSheet.create({
   bottomSheet: {
-      position: 'absolute',
-      left: 0,
       justifyContent: 'flex-start',
       alignItems: 'center',
       backgroundColor: colors.neutral,
-      top: 0,
-      bottom: 0,
   },
 });

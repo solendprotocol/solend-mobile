@@ -58,10 +58,8 @@ import {
   });
   
   export const walletAssetsAtom = atomWithRefresh(async (get) => {
-    console.log(1)
     const rawWalletData = await get(rawWalletDataAtom);
     const metadata = get(metadataAtom);
-    console.log(rawWalletData, metadata);
   
     return rawWalletData ? formatWalletAssets(rawWalletData, metadata) : [];
   });

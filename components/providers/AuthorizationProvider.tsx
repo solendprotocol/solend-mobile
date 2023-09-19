@@ -8,6 +8,7 @@ import {
   DeauthorizeAPI,
   ReauthorizeAPI,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import {toUint8Array} from 'js-base64';
 import {useState, useCallback, useMemo, ReactNode, useEffect} from 'react';
 import React from 'react';
@@ -18,6 +19,7 @@ import { setPublicKeyAtom } from '../atoms/wallet';
 import { loadPoolsAtom, poolsAtom, selectedPoolAddressAtom, selectedPoolAtom, unqiueAssetsAtom } from '../atoms/pools';
 import { configAtom } from '../atoms/config';
 import { loadMetadataAtom } from '../atoms/metadata';
+import { alertAndLog } from '../../util/alertAndLog';
 
 export type Account = Readonly<{
   address: Base64EncodedAddress;
@@ -78,6 +80,7 @@ export interface AuthorizationProviderContext {
   accounts: Account[] | null;
   authorizeSession: (wallet: AuthorizeAPI & ReauthorizeAPI) => Promise<Account>;
   deauthorizeSession: (wallet: DeauthorizeAPI) => void;
+  connect: () => void;
   onChangeAccount: (nextSelectedAccount: Account) => void;
   selectedAccount: Account | null;
 }
@@ -90,6 +93,9 @@ const AuthorizationContext = React.createContext<AuthorizationProviderContext>({
   deauthorizeSession: (_wallet: DeauthorizeAPI) => {
     throw new Error('AuthorizationProvider not initialized');
   },
+  connect: () => {
+    throw new Error('AuthorizationProvider not initialized');
+  }, 
   onChangeAccount: (_nextSelectedAccount: Account) => {
     throw new Error('AuthorizationProvider not initialized');
   },
@@ -99,6 +105,7 @@ const AuthorizationContext = React.createContext<AuthorizationProviderContext>({
 function AuthorizationProvider(props: {children: ReactNode}) {
   const setPublicKeyInAtom = useSetAtom(setPublicKeyAtom);
   const setSelectedPoolAddress = useSetAtom(selectedPoolAddressAtom);
+  const [authorizationInProgress, setAuthorizationInProgress] = useState(false);
   const {children} = props;
   const setPools = useSetAtom(poolsAtom);
   const [config] = useAtom(configAtom);
@@ -137,6 +144,7 @@ function AuthorizationProvider(props: {children: ReactNode}) {
     }
   }, [unqiueAssets.length]);
 
+
   const handleAuthorizationResult = useCallback(
     async (
       authorizationResult: AuthorizationResult,
@@ -166,6 +174,26 @@ function AuthorizationProvider(props: {children: ReactNode}) {
     },
     [authorization, handleAuthorizationResult],
   );
+
+  const connect = useCallback(async () => {
+    try {
+      if (authorizationInProgress) {
+        return;
+      }
+      setAuthorizationInProgress(true);
+      await transact(async wallet => {
+        await authorizeSession(wallet);
+      });
+    } catch (err: any) {
+      alertAndLog(
+        'Error during connect',
+        err instanceof Error ? err.message : err,
+      );
+    } finally {
+      setAuthorizationInProgress(false);
+    }
+  }, [authorizationInProgress, authorizeSession]);
+
   const deauthorizeSession = useCallback(
     async (wallet: DeauthorizeAPI) => {
       if (authorization?.authToken == null) {
@@ -201,10 +229,11 @@ function AuthorizationProvider(props: {children: ReactNode}) {
       accounts: authorization?.accounts ?? null,
       authorizeSession,
       deauthorizeSession,
+      connect,
       onChangeAccount,
       selectedAccount: authorization?.selectedAccount ?? null,
     }),
-    [authorization, authorizeSession, deauthorizeSession, onChangeAccount],
+    [authorization, authorizeSession, deauthorizeSession, onChangeAccount, connect],
   );
 
   return (

@@ -25,6 +25,8 @@ textClassName?: string;
     | 'brandAlt';
   children?: React.ReactNode;
   style?: any;
+  onPress?: () => void;
+  onLongPress?: () => void;
 };
 
 Typography.defaultProps = {
@@ -33,6 +35,8 @@ Typography.defaultProps = {
   color: 'primary',
   children: null,
   style: undefined,
+  onPress: undefined,
+  onLongPress: undefined,
 };
 
 function Typography({
@@ -41,6 +45,8 @@ function Typography({
   textClassName = '',
   children,
   style,
+  onPress,
+  onLongPress
 }: TypographyPropsType): ReactElement {
   const fontStyleMap = {
     display: {
@@ -86,6 +92,8 @@ function Typography({
 
   const fontStyle = fontStyleMap[level];
   return <Text
+  onPress={onPress}
+  onLongPress={onLongPress}
   className={`text-${color} ${textClassName}`}
     style={{
         ...fontStyle,

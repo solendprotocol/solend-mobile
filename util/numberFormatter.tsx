@@ -73,7 +73,7 @@ export function formatUsd(
     return `${omitPrefix ? "" : "$"}0${rounded ? "" : ".00"}`;
   }
 
-  return `${neg ? "-" : ""}${numbro(abs).format({
+  return `${neg ? "-" : ""}${omitPrefix ? "" : "$"}${numbro(abs).format({
     thousandSeparated: true,
     trimMantissa: false,
     mantissa: rounded ? 0 : 2,
