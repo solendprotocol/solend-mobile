@@ -5,8 +5,5 @@ module.exports = {
       {unstable_transformProfile: 'hermes-stable'},
     ],
   ],
-  plugins: [
-    'react-native-reanimated/plugin',
-    "nativewind/babel"
-  ]
+  plugins: ['react-native-reanimated/plugin', 'nativewind/babel'],
 };

@@ -1,11 +1,11 @@
 import BigNumber from 'bignumber.js';
-import { atom } from 'jotai';
-import { atomFamily, loadable } from 'jotai/utils';
-import { poolsFamily, poolsWithMetaDataAtom, selectedPoolAtom } from './pools';
-import { publicKeyAtom } from './wallet';
-import { connectionAtom } from './settings';
-import { configAtom } from './config';
-import { PublicKey } from '@solana/web3.js';
+import {atom} from 'jotai';
+import {atomFamily, loadable} from 'jotai/utils';
+import {poolsFamily, poolsWithMetaDataAtom, selectedPoolAtom} from './pools';
+import {publicKeyAtom} from './wallet';
+import {connectionAtom} from './settings';
+import {configAtom} from './config';
+import {PublicKey} from '@solana/web3.js';
 import {
   createObligationAddress,
   fetchObligationByAddress,
@@ -13,7 +13,7 @@ import {
   formatObligation,
   Obligation,
 } from '@solendprotocol/solend-sdk';
-import { DEBUG_MODE, PROGRAM_ID } from '../../util/config';
+import {DEBUG_MODE, PROGRAM_ID} from '../../util/config';
 
 export type ObligationType = Awaited<ReturnType<typeof formatObligation>>;
 
@@ -21,16 +21,16 @@ export const rawObligationsAtom = atom<{
   [address: string]: RawObligationType;
 }>({});
 
-export const obligationsAtom = atom<Array<ObligationType>>((get) => {
+export const obligationsAtom = atom<Array<ObligationType>>(get => {
   const pools = get(poolsWithMetaDataAtom);
   return Object.values(get(rawObligationsAtom))
     .filter(
-      (o) => o.info && pools[o.info.lendingMarket.toBase58()]?.reserves.length,
+      o => o.info && pools[o.info.lendingMarket.toBase58()]?.reserves.length,
     )
-    .map((o) =>
+    .map(o =>
       o.info
         ? formatObligation(
-            o as { pubkey: PublicKey; info: Obligation },
+            o as {pubkey: PublicKey; info: Obligation},
             pools[o.info.lendingMarket.toBase58()],
           )
         : null,
@@ -49,22 +49,24 @@ export type RawObligationType = {
 };
 
 export const loadObligationsAtom = atom(
-  (get) => get(rawObligationsAtom),
+  get => get(rawObligationsAtom),
   async (get, set, fullLoad) => {
     const publicKey = get(publicKeyAtom);
     const connection = get(connectionAtom);
     const config = await get(configAtom);
 
-    if (!publicKey) return;
+    if (!publicKey) {
+      return;
+    }
 
     const keys = await Promise.all(
-      config.map((pool) =>
+      config.map(pool =>
         createObligationAddress(publicKey, pool.address, PROGRAM_ID),
       ),
     );
     const obligations = fullLoad
       ? await fetchObligationsByAddress(keys, connection, DEBUG_MODE)
-      : keys.map((o) => ({
+      : keys.map(o => ({
           pubkey: new PublicKey(o),
           info: null,
         }));
@@ -72,7 +74,7 @@ export const loadObligationsAtom = atom(
     set(
       rawObligationsAtom,
       Object.fromEntries(
-        obligations.map((obligation) => [
+        obligations.map(obligation => [
           obligation.pubkey.toBase58(),
           obligation,
         ]),
@@ -83,16 +85,20 @@ export const loadObligationsAtom = atom(
 
 const obligationsFamily = atomFamily((address: string) =>
   atom(
-    (get) => {
+    get => {
       const rawObligation = get(rawObligationsAtom)[address];
-      if (!rawObligation?.info) return null;
+      if (!rawObligation?.info) {
+        return null;
+      }
 
       const pool = get(
         poolsFamily(rawObligation.info.lendingMarket.toBase58()),
       );
-      if (!pool.reserves.length) return null;
+      if (!pool.reserves.length) {
+        return null;
+      }
       return formatObligation(
-        rawObligation as { pubkey: PublicKey; info: Obligation },
+        rawObligation as {pubkey: PublicKey; info: Obligation},
         pool,
       );
     },
@@ -100,7 +106,7 @@ const obligationsFamily = atomFamily((address: string) =>
       const prev = get(rawObligationsAtom);
       set(rawObligationsAtom, {
         ...prev,
-        [address]: { ...prev[address], ...arg },
+        [address]: {...prev[address], ...arg},
       });
     },
   ),
@@ -109,12 +115,16 @@ const obligationsFamily = atomFamily((address: string) =>
 export const selectedObligationAddressAtom = atom<string | null>(null);
 
 export const selectedObligationAtom = atom(
-  (get) => {
+  get => {
     const selectedObligationAddress = get(selectedObligationAddressAtom);
-    if (!selectedObligationAddress) return null;
+    if (!selectedObligationAddress) {
+      return null;
+    }
 
     const obligation = get(obligationsFamily(selectedObligationAddress));
-    if (!obligation) return null;
+    if (!obligation) {
+      return null;
+    }
 
     return obligation;
   },
@@ -132,7 +142,7 @@ export const selectedObligationAtom = atom(
       newSelectedObligationAddress,
       connection,
       DEBUG_MODE,
-    ).then((ob) => {
+    ).then(ob => {
       if (ob) {
         const selectedPool = get(selectedPoolAtom);
         if (ob.info.lendingMarket.toBase58() !== selectedPool?.address) {

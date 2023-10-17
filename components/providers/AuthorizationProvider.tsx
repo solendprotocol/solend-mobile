@@ -14,12 +14,26 @@ import {useState, useCallback, useMemo, ReactNode, useEffect} from 'react';
 import React from 'react';
 
 import {RPC_ENDPOINT} from './ConnectionProvider';
-import { useAtom, useSetAtom } from 'jotai';
-import { setPublicKeyAtom } from '../atoms/wallet';
-import { loadPoolsAtom, poolsAtom, selectedPoolAddressAtom, selectedPoolAtom, unqiueAssetsAtom } from '../atoms/pools';
-import { configAtom } from '../atoms/config';
-import { loadMetadataAtom } from '../atoms/metadata';
-import { alertAndLog } from '../../util/alertAndLog';
+import {useAtom, useSetAtom} from 'jotai';
+import {
+  publicKeyAtom,
+  rawWalletDataAtom,
+  setPublicKeyAtom,
+} from '../atoms/wallet';
+import {
+  SelectedReserveType,
+  poolsAtom,
+  selectedPoolAddressAtom,
+  selectedPoolAtom,
+  unqiueAssetsAtom,
+} from '../atoms/pools';
+import {configAtom} from '../atoms/config';
+import {loadMetadataAtom} from '../atoms/metadata';
+import {alertAndLog} from '../../util/alertAndLog';
+import {currentSlotAtom, switchboardAtom} from '../atoms/settings';
+import {loadable} from 'jotai/utils';
+import {loadObligationsAtom} from '../atoms/obligations';
+import {ActionType} from '@solendprotocol/solend-sdk';
 
 export type Account = Readonly<{
   address: Base64EncodedAddress;
@@ -82,6 +96,11 @@ export interface AuthorizationProviderContext {
   deauthorizeSession: (wallet: DeauthorizeAPI) => void;
   connect: () => void;
   onChangeAccount: (nextSelectedAccount: Account) => void;
+  selectedReserve: SelectedReserveType | null;
+  setSelectedReserve: (reserve: SelectedReserveType | null) => void;
+  selectedAction: ActionType;
+  setSelectedAction: (reserve: ActionType) => void;
+  loadAll: () => void;
   selectedAccount: Account | null;
 }
 
@@ -95,55 +114,95 @@ const AuthorizationContext = React.createContext<AuthorizationProviderContext>({
   },
   connect: () => {
     throw new Error('AuthorizationProvider not initialized');
-  }, 
+  },
   onChangeAccount: (_nextSelectedAccount: Account) => {
     throw new Error('AuthorizationProvider not initialized');
   },
+  loadAll: () => {},
   selectedAccount: null,
+  selectedReserve: null,
+  setSelectedReserve: () => {},
+  selectedAction: 'deposit',
+  setSelectedAction: () => {},
 });
 
 function AuthorizationProvider(props: {children: ReactNode}) {
+  const [selectedReserve, setSelectedReserve] =
+    useState<SelectedReserveType | null>(null);
   const setPublicKeyInAtom = useSetAtom(setPublicKeyAtom);
-  const setSelectedPoolAddress = useSetAtom(selectedPoolAddressAtom);
+  const setSelectedPoolAddress = useSetAtom(selectedPoolAtom);
   const [authorizationInProgress, setAuthorizationInProgress] = useState(false);
   const {children} = props;
   const setPools = useSetAtom(poolsAtom);
+  const refreshCurrentSlot = useSetAtom(currentSlotAtom);
+  const [switchboardProgram] = useAtom(loadable(switchboardAtom));
+  const [selectedAction, setSelectedAction] = useState<ActionType>('deposit');
+  const refreshWallet = useSetAtom(rawWalletDataAtom);
+  const [publicKey] = useAtom(publicKeyAtom);
   const [config] = useAtom(configAtom);
-  const loadPools = useSetAtom(loadPoolsAtom);
   const [unqiueAssets] = useAtom(unqiueAssetsAtom);
-  const loadMetadata = useSetAtom(loadMetadataAtom);
   const [authorization, setAuthorization] = useState<Authorization | null>(
     null,
   );
+  const loadObligation = useSetAtom(loadObligationsAtom);
+  const loadMetadata = useSetAtom(loadMetadataAtom);
+
+  const loadAll = useCallback(async () => {
+    if (switchboardProgram.state !== 'hasData') {
+      return;
+    }
+    const reloadPromises = [];
+    // This blocks the JS thread too much
+    // reloadPromises.push(loadPools());
+
+    reloadPromises.push(setSelectedPoolAddress(null, true));
+    if (publicKey) {
+      reloadPromises.push(loadObligation(true));
+      reloadPromises.push(refreshWallet());
+    }
+    // reloadPromises.push(refreshCurrentSlot());
+    await Promise.all(reloadPromises);
+  }, [
+    loadObligation,
+    refreshCurrentSlot,
+    refreshWallet,
+    switchboardProgram,
+    publicKey,
+  ]);
 
   useEffect(() => {
-    setPublicKeyInAtom(authorization?.selectedAccount?.publicKey.toBase58() ?? null);
-  }, [authorization?.selectedAccount?.publicKey.toBase58(), setPublicKeyInAtom]);
+    setPublicKeyInAtom(
+      authorization?.selectedAccount?.publicKey.toBase58() ?? null,
+    );
+  }, [
+    authorization?.selectedAccount?.publicKey.toBase58(),
+    setPublicKeyInAtom,
+  ]);
 
   useEffect(() => {
     setSelectedPoolAddress('4UpD2fh7xH3VP9QQaXtsS1YY3bxzWhtfpks7FatyKvdY');
 
-    setPools(Object.fromEntries(
-      config.map((pool) => [
-        pool.address,
-        {
-          name: pool.name,
-          authorityAddress: pool.authorityAddress,
-          address: pool.address,
-          owner: pool.owner,
-          reserves: [],
-        },
-      ]),
-    ));
-    loadPools();
-  }, [])
+    setPools(
+      Object.fromEntries(
+        config.map(pool => [
+          pool.address,
+          {
+            name: pool.name,
+            authorityAddress: pool.authorityAddress,
+            address: pool.address,
+            owner: pool.owner,
+            reserves: [],
+          },
+        ]),
+      ),
+    );
+  }, []);
 
   useEffect(() => {
     if (unqiueAssets.length > 0) {
       loadMetadata();
     }
   }, [unqiueAssets.length]);
-
 
   const handleAuthorizationResult = useCallback(
     async (
@@ -231,9 +290,22 @@ function AuthorizationProvider(props: {children: ReactNode}) {
       deauthorizeSession,
       connect,
       onChangeAccount,
+      selectedReserve,
+      setSelectedReserve,
+      selectedAction,
+      setSelectedAction,
+      loadAll,
       selectedAccount: authorization?.selectedAccount ?? null,
     }),
-    [authorization, authorizeSession, deauthorizeSession, onChangeAccount, connect],
+    [
+      authorization,
+      selectedReserve,
+      selectedAction,
+      authorizeSession,
+      deauthorizeSession,
+      onChangeAccount,
+      connect,
+    ],
   );
 
   return (

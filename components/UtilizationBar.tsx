@@ -1,10 +1,10 @@
-import React, { ReactElement, useEffect, useState } from 'react';
-import { useAtom } from 'jotai';
+import React, {ReactElement, useEffect, useState} from 'react';
+import {useAtom} from 'jotai';
 import classNames from 'classnames';
 import BigNumber from 'bignumber.js';
-import { formatPercent, formatUsd } from '../util/numberFormatter';
-import { selectedObligationAtom } from './atoms/obligations';
-import { Pressable, View } from 'react-native';
+import {formatPercent, formatUsd} from '../util/numberFormatter';
+import {selectedObligationAtom} from './atoms/obligations';
+import {Pressable, View} from 'react-native';
 
 Section.defaultProps = {
   width: 1.5,
@@ -20,12 +20,12 @@ function Section({
   extraClassName?: string;
 }) {
   return (
-      <View
-        style={{
-          width: `${width}%`,
-        }}
-        className={classNames('h-full bg-line', extraClassName)}
-      />
+    <View
+      style={{
+        width: `${width}%`,
+      }}
+      className={classNames('h-full bg-line', extraClassName)}
+    />
   );
 }
 
@@ -124,7 +124,7 @@ function UtilizationBar({
     denominator - totalBorrowWidth - unborrowedWidth - unliquidatedWidth;
 
   return (
-    <Pressable className='w-full h-2 flex flex-row' onPress={onClick}>
+    <Pressable className="w-full h-2 flex flex-row" onPress={onClick}>
       {showBreakdown && (
         <Section
           width={borrowWidth}
@@ -143,27 +143,11 @@ function UtilizationBar({
           extraClassName={passedLimit ? 'bg-brand' : 'bg-brandAlt'}
         />
       )}
-      {!passedLimit && (
-        <Section
-          width={unborrowedWidth}
-        />
-      )}
-      {!passedLimit && (
-        <Section
-          extraClassName='bg-primary'
-        />
-      )}
-      <Section
-        width={unliquidatedWidth}
-      />
-      {!passedThreshold && (
-        <Section
-          extraClassName='bg-brand'
-        />
-      )}
-      <Section
-        width={unusedSupply}
-      />
+      {!passedLimit && <Section width={unborrowedWidth} />}
+      {!passedLimit && <Section extraClassName="bg-primary" />}
+      <Section width={unliquidatedWidth} />
+      {!passedThreshold && <Section extraClassName="bg-brand" />}
+      <Section width={unusedSupply} />
     </Pressable>
   );
 }

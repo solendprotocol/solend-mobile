@@ -1,13 +1,10 @@
-import { PublicKey } from '@solana/web3.js';
-import { atom } from 'jotai';
-import {
-  atomFamily,
-  selectAtom,
-} from 'jotai/utils';
-import { publicKeyAtom } from './wallet';
-import { connectionAtom, switchboardAtom } from './settings';
-import { metadataAtom } from './metadata';
-import { selectedObligationAtom } from './obligations';
+import {PublicKey} from '@solana/web3.js';
+import {atom} from 'jotai';
+import {atomFamily, selectAtom} from 'jotai/utils';
+import {publicKeyAtom} from './wallet';
+import {connectionAtom, currentSlotAtom, switchboardAtom} from './settings';
+import {metadataAtom} from './metadata';
+import {selectedObligationAtom} from './obligations';
 import BigNumber from 'bignumber.js';
 import {
   createObligationAddress,
@@ -18,8 +15,8 @@ import {
   parseRateLimiter,
   PoolType,
 } from '@solendprotocol/solend-sdk';
-import { DEBUG_MODE, PROGRAM_ID } from '../../util/config';
-import { atomWithRefresh } from './shared';
+import {DEBUG_MODE, PROGRAM_ID} from '../../util/config';
+import {atomWithRefresh} from './shared';
 
 export type ReserveWithMetadataType = ReserveType & {
   symbol: string;
@@ -38,7 +35,7 @@ export type SelectedPoolType = {
 };
 
 export const poolsStateAtom = atom<'initial' | 'loading' | 'error' | 'done'>(
-  (get) =>
+  get =>
     Object.values(get(poolsAtom)).reduce(
       (acc, p) => p.reserves.length + acc,
       0,
@@ -47,10 +44,10 @@ export const poolsStateAtom = atom<'initial' | 'loading' | 'error' | 'done'>(
       : 'done',
 );
 
-export const poolsAtom = atom<{ [address: string]: PoolType }>({});
+export const poolsAtom = atom<{[address: string]: PoolType}>({});
 
 export const loadPoolsAtom = atom(
-  (get) => {
+  get => {
     get(poolsAtom);
   },
   async (get, set) => {
@@ -58,7 +55,6 @@ export const loadPoolsAtom = atom(
     const pools = get(poolsAtom);
     const switchboardProgram = await get(switchboardAtom);
     const currentSlot = await get(currentSlotAtom);
-
 
     set(
       poolsAtom,
@@ -76,32 +72,32 @@ export const loadPoolsAtom = atom(
 
 export const poolsFamily = atomFamily((address: string) =>
   atom(
-    (get) => {
+    get => {
       return get(poolsWithMetaDataAtom)[address];
     },
     (get, set, arg: PoolType) => {
       const prev = get(poolsAtom);
-      set(poolsAtom, { ...prev, [address]: { ...prev[address], ...arg } });
+      set(poolsAtom, {...prev, [address]: {...prev[address], ...arg}});
     },
   ),
 );
 
-export const reserveToMintMapAtom = atom((get) => {
+export const reserveToMintMapAtom = atom(get => {
   const pools = get(poolsAtom);
 
   return Object.fromEntries(
     Object.values(pools)
-      .flatMap((pool) => pool.reserves)
-      .map((r) => [r.address, r.mintAddress]),
+      .flatMap(pool => pool.reserves)
+      .map(r => [r.address, r.mintAddress]),
   );
 });
 
-export const poolsWithMetaDataAtom = atom((get) => {
+export const poolsWithMetaDataAtom = atom(get => {
   const metadata = get(metadataAtom);
   const pools = get(poolsAtom);
 
   return Object.fromEntries(
-    Object.values(pools).map((p) => [
+    Object.values(pools).map(p => [
       p.address,
       {
         ...p,
@@ -109,7 +105,7 @@ export const poolsWithMetaDataAtom = atom((get) => {
           (acc, r) => r.totalSupplyUsd.plus(acc),
           BigNumber(0),
         ),
-        reserves: p.reserves.map((r) => ({
+        reserves: p.reserves.map(r => ({
           ...r,
           symbol: metadata[r.mintAddress]?.symbol,
           logo: metadata[r.mintAddress]?.logoUri,
@@ -119,15 +115,12 @@ export const poolsWithMetaDataAtom = atom((get) => {
   );
 });
 
-export const currentSlotAtom = atomWithRefresh(async (get) => {
-  const connection = get(connectionAtom);
-  return connection.getSlot();
-});
-
-export const rateLimiterAtom = atom(async (get) => {
+export const rateLimiterAtom = atom(async get => {
   const selectedPoolAddress = get(selectedPoolAddressAtom);
   const connection = get(connectionAtom);
-  if (!selectedPoolAddress) return null;
+  if (!selectedPoolAddress) {
+    return null;
+  }
   const currentSlot = await get(currentSlotAtom);
   const pool = await connection.getAccountInfo(
     new PublicKey(selectedPoolAddress),
@@ -149,15 +142,19 @@ export const selectedPoolAddressAtom = atom<string | null>(null);
 export const selectedReserveAddressAtom = atom<string | null>(null);
 
 export const selectedPoolAtom = atom(
-  (get) => {
+  get => {
     const selectedPoolAddress = get(selectedPoolAddressAtom);
-    if (!selectedPoolAddress) return null;
+    if (!selectedPoolAddress) {
+      return null;
+    }
     const metadata = get(metadataAtom);
     const selectedPool = get(poolsFamily(selectedPoolAddress));
-    if (!selectedPool) return null;
+    if (!selectedPool) {
+      return null;
+    }
     return {
       ...selectedPool,
-      reserves: selectedPool.reserves.map((r) => {
+      reserves: selectedPool.reserves.map(r => {
         const addressString = r.mintAddress;
         const tokenMetadata = metadata[addressString];
 
@@ -169,30 +166,42 @@ export const selectedPoolAtom = atom(
       }),
     };
   },
-  async (get, set, newSelectedPoolAddress: string | null) => {
-    if (!newSelectedPoolAddress) return;
+  async (
+    get,
+    set,
+    newSelectedPoolAddress: string | null,
+    refresh?: boolean,
+  ) => {
+    const selectedPoolAddress = get(selectedPoolAddressAtom);
+    const usedAddress = refresh
+      ? newSelectedPoolAddress ?? selectedPoolAddress
+      : newSelectedPoolAddress;
+    if (!usedAddress) {
+      return;
+    }
     const [connection, publicKey] = await Promise.all([
       get(connectionAtom),
       get(publicKeyAtom),
-    ])
+    ]);
     const switchboardProgram = await get(switchboardAtom);
-    const poolToUpdateAtom = poolsFamily(newSelectedPoolAddress);
+    const poolToUpdateAtom = poolsFamily(usedAddress);
     if (!poolToUpdateAtom) {
       throw Error('Selected pool not found');
     }
+    const poolToUpdate = get(poolToUpdateAtom);
 
     let newSelectedObligationAddress: string | null = null;
     if (publicKey) {
       newSelectedObligationAddress = await createObligationAddress(
         publicKey,
-        newSelectedPoolAddress,
+        usedAddress,
         PROGRAM_ID,
       );
     }
     const currentSlot = await get(currentSlotAtom);
 
-    getReservesOfPool(
-      new PublicKey(newSelectedPoolAddress),
+    const reserves = await getReservesOfPool(
+      new PublicKey(usedAddress),
       connection,
       switchboardProgram,
       PROGRAM_ID,
@@ -200,25 +209,30 @@ export const selectedPoolAtom = atom(
       DEBUG_MODE,
     );
 
+    set(poolToUpdateAtom, {
+      ...poolToUpdate,
+      reserves: reserves,
+    });
+
     if (newSelectedObligationAddress) {
       set(selectedObligationAtom, newSelectedObligationAddress);
     }
 
-    set(selectedPoolAddressAtom, newSelectedPoolAddress);
+    set(selectedPoolAddressAtom, usedAddress);
   },
 );
 
 export const selectedPoolStateAtom = atom<
   'initial' | 'loading' | 'error' | 'done'
->((get) =>
+>(get =>
   (get(selectedPoolAtom)?.reserves?.length ?? 0) === 0 ? 'loading' : 'done',
 );
 
 export const unqiueAssetsAtom = selectAtom(
   poolsAtom,
-  (pools) => {
-    const assets = Object.values(pools).flatMap((p) =>
-      p.reserves.map((r) => r.mintAddress),
+  pools => {
+    const assets = Object.values(pools).flatMap(p =>
+      p.reserves.map(r => r.mintAddress),
     );
     return assets.filter((item, pos) => assets.indexOf(item) === pos);
   },

@@ -1,8 +1,8 @@
-import React, { ReactElement } from 'react';
-import { Text } from 'react-native';
+import React, {ReactElement} from 'react';
+import {Text} from 'react-native';
 
 export type TypographyPropsType = {
-textClassName?: string;
+  textClassName?: string;
   level?:
     | 'display'
     | 'title'
@@ -46,62 +46,63 @@ function Typography({
   children,
   style,
   onPress,
-  onLongPress
+  onLongPress,
 }: TypographyPropsType): ReactElement {
   const fontStyleMap = {
     display: {
-        fontFamily: 'IBMPlexSans-Light',
-        fontSize: 48,
+      fontFamily: 'IBMPlexSans-Light',
+      fontSize: 48,
     },
     title: {
-        fontFamily: 'IBMPlexSans-SemiBold',
-        fontSize: 16,
+      fontFamily: 'IBMPlexSans-SemiBold',
+      fontSize: 16,
     },
     headline: {
-        fontFamily: 'IBMPlexSans-SemiBold',
-        fontSize: 13,
-        lineHeight: 20,
+      fontFamily: 'IBMPlexSans-SemiBold',
+      fontSize: 13,
+      lineHeight: 20,
     },
     body: {
-        fontFamily: 'IBMPlexSans-Regular',
-        fontSize: 13,
-        lineHeight: 20,
+      fontFamily: 'IBMPlexSans-Regular',
+      fontSize: 13,
+      lineHeight: 20,
     },
     bodyMono: {
-        fontFamily: 'IBMPlexMono-Regular',
-        fontSize: 13,
+      fontFamily: 'IBMPlexMono-Regular',
+      fontSize: 13,
     },
     label: {
-        fontFamily: 'IBMPlexSans-SemiBold',
-        fontSize: 11,
+      fontFamily: 'IBMPlexSans-SemiBold',
+      fontSize: 11,
     },
     caption: {
-        fontFamily: 'IBMPlexSans-Regular',
-        fontSize: 11,
-        lineHeight: 16,
+      fontFamily: 'IBMPlexSans-Regular',
+      fontSize: 11,
+      lineHeight: 16,
     },
     captionMono: {
-        fontFamily: 'IBMPlexMono-Regular',
-        fontSize: 10,
+      fontFamily: 'IBMPlexMono-Regular',
+      fontSize: 10,
     },
     disclosure: {
-        fontFamily: 'IBMPlexSans-Regular',
-        fontSize: 9,
+      fontFamily: 'IBMPlexSans-Regular',
+      fontSize: 9,
     },
   };
 
   const fontStyle = fontStyleMap[level];
-  return <Text
-  onPress={onPress}
-  onLongPress={onLongPress}
-  className={`text-${color} ${textClassName}`}
-    style={{
+  return (
+    <Text
+      onPress={onPress}
+      onLongPress={onLongPress}
+      className={`text-${color} ${textClassName}`}
+      style={{
         ...fontStyle,
         ...style,
-    }}
-  >
-    {children}
-  </Text>
+      }}>
+      {children}
+    </Text>
+  );
 }
 
 export default Typography;

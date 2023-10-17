@@ -1,15 +1,15 @@
-import { atom, Getter } from 'jotai';
-import { atomWithReducer } from 'jotai/utils';
+import {atom, Getter} from 'jotai';
+import {atomWithReducer} from 'jotai/utils';
 
 export function atomWithRefresh<T>(fn: (get: Getter) => T) {
   const refreshCounter = atom(0);
 
   return atom(
-    (get) => {
+    get => {
       get(refreshCounter);
       return fn(get);
     },
-    (_, set) => set(refreshCounter, (i) => i + 1),
+    (_, set) => set(refreshCounter, i => i + 1),
   );
 }
 
