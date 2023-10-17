@@ -1,18 +1,7 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {
-  FlatList,
-  Image,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import {useAtom, useSetAtom} from 'jotai';
-import {selectedPoolAtom} from '../components/atoms/pools';
+import React, {useEffect, useState} from 'react';
+import {FlatList, Image, Pressable, View} from 'react-native';
+import {useAtom} from 'jotai';
+import {selectedPoolAtom, selectedPoolStateAtom} from '../components/atoms/pools';
 import {U64_MAX} from '@solendprotocol/solend-sdk';
 import Typography from '../components/Typography';
 import Metric from '../components/Metric';
@@ -30,6 +19,7 @@ import {configPointsAtom} from '../components/atoms/points';
 function MainScreen() {
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [selectedPool] = useAtom(selectedPoolAtom);
+  const [selectedPoolState] = useAtom(selectedPoolStateAtom);
   const [config] = useAtom(configPointsAtom);
   const {loadAll, selectedReserve, setSelectedReserve} = useAuthorization();
   const [showDisabled, setShowDisabled] = useState(false);
@@ -107,19 +97,16 @@ function MainScreen() {
       </Typography>
       <View className="flex-1">
         <FlatList
-          className="border-t border-line"
-          refreshing={isFetching}
+          className="border-t border-line flex-1"
+          refreshing={isFetching || selectedPoolState === 'loading'}
           onRefresh={async () => {
             setIsFetching(true);
             await loadAll();
             setIsFetching(false);
           }}
           data={reserves}
-          style={{flex: 1}}
           renderItem={item => {
-
-
-        const atSupplyLimit =
+            const atSupplyLimit =
               item.item.reserveSupplyCap.eq(0) ||
               item.item.totalSupply.isGreaterThanOrEqualTo(
                 item.item.reserveSupplyCap.times(
@@ -142,7 +129,8 @@ function MainScreen() {
               c => c.reserve === item.item.address && c.side === 'borrow',
             );
 
-            return <Pressable
+            return (
+              <Pressable
                 key={item.item.address}
                 onPress={() => setSelectedReserve(item.item)}
                 className="px-2 flex flex-row justify-between py-2 border-line border-b">
@@ -263,7 +251,9 @@ function MainScreen() {
                     />
                   </View>
                 </View>
-              </Pressable>;}}
+              </Pressable>
+            );
+          }}
         />
       </View>
       <Pressable

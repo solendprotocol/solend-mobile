@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import BigNumber from 'bignumber.js';
 import axios from 'axios';
 import {useAtom, useSetAtom} from 'jotai';
@@ -98,11 +98,11 @@ export default function PointsLoader({
     }
   }, avgSlotTimeUsed * 1000);
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     axios.get(LEADERBOARD_ENDPOINT).then(res => {
       setLeaderboard(
-        res.data.map((res: PointsAccountResponseType) =>
-          parsePointsAccount(res, avgSlotTimeUsed),
+        res.data.map((resData: PointsAccountResponseType) =>
+          parsePointsAccount(resData, avgSlotTimeUsed),
         ),
       );
     });
@@ -157,7 +157,15 @@ export default function PointsLoader({
         });
       });
     }
-  }
+  }, [
+    setLeaderboard,
+    setConfig,
+    setComputedClicks,
+    setUserPoints,
+    currentSlot,
+    publicKey,
+    avgSlotTimeUsed,
+  ]);
 
   useEffect(() => {
     if (avgSlotTimeUsed > 0) {
@@ -173,7 +181,15 @@ export default function PointsLoader({
         status: 'unclicked',
       });
     }
-  }, [publicKey, avgSlotTimeUsed]);
+  }, [
+    publicKey,
+    avgSlotTimeUsed,
+    setUserPoints,
+    setComputedPoints,
+    setComputedClicks,
+    setClicked,
+    loadData,
+  ]);
 
   return children;
 }

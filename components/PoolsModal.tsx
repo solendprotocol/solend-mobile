@@ -1,9 +1,6 @@
 import React from 'react';
 import {FlatList, Image, Pressable, StyleSheet, View} from 'react-native';
-import ConnectButton from './ConnectButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import colors from '../colors';
-import Modal from 'react-native-modal/dist/modal';
 import Typography from './Typography';
 import {useAtom, useSetAtom} from 'jotai';
 import {selectedPoolAtom} from './atoms/pools';

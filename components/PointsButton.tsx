@@ -1,21 +1,11 @@
 import React, {useState, useCallback} from 'react';
-import {
-  Image,
-  ImageBackground,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from 'react-native';
-import ConnectButton from './ConnectButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import {Pressable, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import colors from '../colors';
-import {collapsableToken, formatToken} from '../util/numberFormatter';
+import {collapsableToken} from '../util/numberFormatter';
 import {GradientText} from './GradientText';
 import PointsModal from './PointsModal';
-import {computedPointsAtom, userPointsAtom} from './atoms/points';
+import {computedPointsAtom} from './atoms/points';
 import {useAtom} from 'jotai';
 
 export function PointsButton() {

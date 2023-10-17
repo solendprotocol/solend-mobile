@@ -20,10 +20,11 @@ function PointsLeaderboard() {
           sortedRank: index + 1,
           rankDelta: index + 1 - r.rank + r.rankDelta,
         })),
-    [leaderboard?.map(i => i.quantity.toString()).join(',')]
+    [leaderboard],
   );
 
-  return <View className="flex-1">
+  return (
+    <View className="flex-1">
       <View className="flex flex-row mt-2 border-t border-line justify-between">
         <Typography
           level="caption"
@@ -52,7 +53,7 @@ function PointsLeaderboard() {
       </View>
       <FlatList
         data={sortedComputedLeaderboard}
-        style={{flex: 1}}
+        className="flex-1"
         renderItem={item => {
           const row = item.item;
           return (
@@ -88,7 +89,8 @@ function PointsLeaderboard() {
           );
         }}
       />
-    </View>;
+    </View>
+  );
 }
 
-export default React.memo(PointsLeaderboard)
+export default React.memo(PointsLeaderboard);

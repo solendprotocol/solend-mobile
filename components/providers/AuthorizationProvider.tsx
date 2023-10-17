@@ -23,14 +23,13 @@ import {
 import {
   SelectedReserveType,
   poolsAtom,
-  selectedPoolAddressAtom,
   selectedPoolAtom,
   unqiueAssetsAtom,
 } from '../atoms/pools';
 import {configAtom} from '../atoms/config';
 import {loadMetadataAtom} from '../atoms/metadata';
 import {alertAndLog} from '../../util/alertAndLog';
-import {currentSlotAtom, switchboardAtom} from '../atoms/settings';
+import {switchboardAtom} from '../atoms/settings';
 import {loadable} from 'jotai/utils';
 import {loadObligationsAtom} from '../atoms/obligations';
 import {ActionType} from '@solendprotocol/solend-sdk';
@@ -134,7 +133,6 @@ function AuthorizationProvider(props: {children: ReactNode}) {
   const [authorizationInProgress, setAuthorizationInProgress] = useState(false);
   const {children} = props;
   const setPools = useSetAtom(poolsAtom);
-  const refreshCurrentSlot = useSetAtom(currentSlotAtom);
   const [switchboardProgram] = useAtom(loadable(switchboardAtom));
   const [selectedAction, setSelectedAction] = useState<ActionType>('deposit');
   const refreshWallet = useSetAtom(rawWalletDataAtom);
@@ -160,11 +158,10 @@ function AuthorizationProvider(props: {children: ReactNode}) {
       reloadPromises.push(loadObligation(true));
       reloadPromises.push(refreshWallet());
     }
-    // reloadPromises.push(refreshCurrentSlot());
     await Promise.all(reloadPromises);
   }, [
+    setSelectedPoolAddress,
     loadObligation,
-    refreshCurrentSlot,
     refreshWallet,
     switchboardProgram,
     publicKey,
@@ -174,10 +171,7 @@ function AuthorizationProvider(props: {children: ReactNode}) {
     setPublicKeyInAtom(
       authorization?.selectedAccount?.publicKey.toBase58() ?? null,
     );
-  }, [
-    authorization?.selectedAccount?.publicKey.toBase58(),
-    setPublicKeyInAtom,
-  ]);
+  }, [authorization?.selectedAccount?.publicKey, setPublicKeyInAtom]);
 
   useEffect(() => {
     setSelectedPoolAddress('4UpD2fh7xH3VP9QQaXtsS1YY3bxzWhtfpks7FatyKvdY');
@@ -202,7 +196,7 @@ function AuthorizationProvider(props: {children: ReactNode}) {
     if (unqiueAssets.length > 0) {
       loadMetadata();
     }
-  }, [unqiueAssets.length]);
+  }, [unqiueAssets.length, loadMetadata]);
 
   const handleAuthorizationResult = useCallback(
     async (
@@ -305,6 +299,7 @@ function AuthorizationProvider(props: {children: ReactNode}) {
       deauthorizeSession,
       onChangeAccount,
       connect,
+      loadAll,
     ],
   );
 

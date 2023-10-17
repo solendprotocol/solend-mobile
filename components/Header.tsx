@@ -1,13 +1,5 @@
-import React, {useState} from 'react';
-import {
-  Image,
-  ImageBackground,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from 'react-native';
+import React from 'react';
+import {Image, ImageBackground, TouchableOpacity, View} from 'react-native';
 import ConnectButton from './ConnectButton';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import colors from '../colors';

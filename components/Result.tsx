@@ -2,7 +2,7 @@ import React from 'react';
 import {formatErrorMsg, titleCase} from '@solendprotocol/solend-sdk';
 import SolendButton from './Button';
 import Typography from './Typography';
-import {Animated, Linking, View, Easing} from 'react-native';
+import {Linking, View} from 'react-native';
 import {formatToken} from '../util/numberFormatter';
 import Loading from './Loading';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -41,21 +41,6 @@ type ResultPropsType = {
 
 export default function Result({result, setResult}: ResultPropsType) {
   let overridePage = <View />;
-  const spinValue = new Animated.Value(0);
-
-  Animated.loop(
-    Animated.timing(spinValue, {
-      toValue: 360,
-      duration: 300000,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    }),
-  ).start();
-
-  const rotateValue = spinValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
 
   if (result?.type === 'loading') {
     overridePage = (

@@ -1,43 +1,15 @@
 import React from 'react';
-import {
-  Button,
-  Dimensions,
-  FlatList,
-  Image,
-  Linking,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import Modal from 'react-native-modal';
-import {formatAddress} from '@solendprotocol/solend-sdk';
+import {Linking, View} from 'react-native';
 import Typography from './Typography';
 import colors from '../colors';
-import axios from 'axios';
-import {
-  collapsableToken,
-  formatToken,
-  formatUsd,
-  ordinalSuffix,
-} from '../util/numberFormatter';
-import LinearGradient from 'react-native-linear-gradient';
-import {GradientText} from './GradientText';
+import {formatToken} from '../util/numberFormatter';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useAtom} from 'jotai';
-import {publicKeyAtom} from './atoms/wallet';
 import {
-  clickPointsAtom,
   computedClicksAtom,
   computedPointsAtom,
-  leaderboardPointsAtom,
   userPointsAtom,
 } from './atoms/points';
-import {CLICK_ENDPOINT} from './PointsLoader';
-import PointsLeaderboard from './PointsLeaderboard';
 
 export type ClickResponseType = {
   current: number;

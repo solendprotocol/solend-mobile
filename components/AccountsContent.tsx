@@ -34,19 +34,19 @@ export default function AccountsContent({navigation}: {navigation: any}) {
             .map(reserve => reserve.mintAddress)
             .includes(asset.mintAddress) && !asset.amount.isZero(),
       ),
-    [walletAssets],
+    [walletAssets, selectedPool?.reserves],
   );
 
   if (!publicKey) {
-    return <View
-        style={{...styles.bottomSheet, justifyContent: 'center'}}
-        className="p-2">
+    return (
+      <View style={styles.bottomSheet} className="p-2">
         <SolendButton buttonStyle="tag" onPress={() => connect()}>
           <Typography level="caption">
             <Icon name="account-balance-wallet" size={8} /> Connect wallet
           </Typography>
         </SolendButton>
-      </View>;
+      </View>
+    );
   }
 
   return (
@@ -258,9 +258,9 @@ export default function AccountsContent({navigation}: {navigation: any}) {
 
 const styles = StyleSheet.create({
   bottomSheet: {
-    justifyContent: 'flex-start',
     alignItems: 'center',
     backgroundColor: colors.neutral,
     height: '100%',
+    justifyContent: 'center',
   },
 });

@@ -1,6 +1,5 @@
 import React, {ReactElement} from 'react';
-import {Button, ButtonProps, Pressable, PressableProps} from 'react-native';
-import Typography from './Typography';
+import {Pressable, PressableProps} from 'react-native';
 
 function SolendButton(
   props: PressableProps & {

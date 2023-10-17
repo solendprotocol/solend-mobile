@@ -1,12 +1,7 @@
-import React, {Suspense, useCallback, useEffect, useRef, useState} from 'react';
+import React, {useState} from 'react';
 import Modal from 'react-native-modal';
-import {
-  SelectedReserveType,
-  rateLimiterAtom,
-  selectedPoolAtom,
-} from '../components/atoms/pools';
+import {SelectedReserveType} from '../components/atoms/pools';
 import BigNumber from 'bignumber.js';
-import Loading from './Loading';
 import TransactionContent from './TransactionContent';
 import {StyleSheet, View} from 'react-native';
 import colors from '../colors';
@@ -70,9 +65,7 @@ export default function TransactionModal({
       onSwipeComplete={() => handleClose()}
       swipeThreshold={25}
       avoidKeyboard
-      style={{
-        margin: 0,
-      }}>
+      className="m-0">
       <View style={[styles.bottomSheet]}>
         {/* <Suspense fallback={<Loading full/>}> */}
         <TransactionContent

@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Connection,
   PublicKey,
@@ -18,7 +19,6 @@ import {SelectedReserveType} from '../components/atoms/pools';
 import {ENVIRONMENT, HOST_ATA} from './config';
 import {ObligationType} from '../components/atoms/obligations';
 import {ResultConfigType} from '../components/Result';
-import {BN} from '@coral-xyz/anchor';
 
 const SOL_PADDING_FOR_RENT_AND_FEE = 0.02;
 
@@ -203,7 +203,9 @@ export const supplyConfigs: ActionConfig = {
     reserve: SelectedReserveType,
     wallet: WalletType,
   ) => {
-    if (!obligation) return null;
+    if (!obligation) {
+      return null;
+    }
 
     // Allow action despite position limit, provided user already has a position in this asset
     const positionLimitReached =
@@ -275,7 +277,9 @@ export const supplyConfigs: ActionConfig = {
 
     const asset = wallet.find(ass => ass.mintAddress === reserve.mintAddress);
 
-    if (!asset) return new BigNumber(0);
+    if (!asset) {
+      return new BigNumber(0);
+    }
 
     const maxSuppliableFromWallet =
       reserve.symbol === 'SOL'
@@ -302,7 +306,7 @@ export const borrowConfigs: ActionConfig = {
     ) => Promise<TransactionSignature>,
     setResult: (result: ResultConfigType | null) => void,
   ) => {
-    let hostAta = undefined;
+    let hostAta;
     if (HOST_ATA) {
       const hostTokenAccountAddress = await getAssociatedTokenAddress(
         new PublicKey(selectedReserve.mintAddress),
@@ -346,7 +350,9 @@ export const borrowConfigs: ActionConfig = {
     wallet: WalletType,
     rateLimiter: ParsedRateLimiter | null,
   ) => {
-    if (!obligation) return null;
+    if (!obligation) {
+      return null;
+    }
 
     const borrowableAmountUntil95utilization = BigNumber.max(
       new BigNumber(reserve.availableAmount).minus(
@@ -525,12 +531,16 @@ export const withdrawConfigs: ActionConfig = {
     wallet: WalletType,
     rateLimiter: ParsedRateLimiter | null,
   ) => {
-    if (!obligation) return null;
+    if (!obligation) {
+      return null;
+    }
 
     const reserveDepositedAmount = obligation.deposits.find(
       d => d.reserveAddress === reserve.address,
     )?.amount;
-    if (!reserveDepositedAmount) return null;
+    if (!reserveDepositedAmount) {
+      return null;
+    }
 
     const constantBorrowLimit = obligation.minPriceBorrowLimit.minus(
       reserveDepositedAmount
@@ -633,7 +643,9 @@ export const withdrawConfigs: ActionConfig = {
       d => d.reserveAddress === reserve.address,
     )?.amount;
 
-    if (!reserveDepositedAmount) return BigNumber(0);
+    if (!reserveDepositedAmount) {
+      return BigNumber(0);
+    }
 
     const constantBorrowLimit = obligation.minPriceBorrowLimit.minus(
       reserveDepositedAmount
@@ -715,12 +727,16 @@ export const repayConfigs: ActionConfig = {
     reserve: SelectedReserveType,
     wallet: WalletType,
   ) => {
-    if (!obligation) return null;
+    if (!obligation) {
+      return null;
+    }
 
     const reserveBorrowedAmount = obligation.borrows.find(
       b => b.reserveAddress === reserve.address,
     )?.amount;
-    if (!reserveBorrowedAmount) return null;
+    if (!reserveBorrowedAmount) {
+      return null;
+    }
 
     if (
       value.isGreaterThan(
@@ -782,12 +798,16 @@ export const repayConfigs: ActionConfig = {
     const asset = wallet.find(
       ass => ass.mintAddress === reserve.mintAddress && ass.symbol !== 'wSOL',
     );
-    if (!asset) return new BigNumber(0);
+    if (!asset) {
+      return new BigNumber(0);
+    }
 
     const reserveBorrowedAmount = obligation.borrows.find(
       b => b.reserveAddress === reserve.address,
     );
-    if (!reserveBorrowedAmount) return BigNumber(0);
+    if (!reserveBorrowedAmount) {
+      return BigNumber(0);
+    }
 
     const maxRepayableFromWallet =
       reserve.symbol === 'SOL'

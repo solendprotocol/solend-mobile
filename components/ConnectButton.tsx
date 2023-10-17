@@ -1,9 +1,7 @@
-import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import React, {ComponentProps, useState, useCallback} from 'react';
-import {Button, Text, View} from 'react-native';
+import React, {ComponentProps, useState} from 'react';
+import {Button, View} from 'react-native';
 
 import {useAuthorization} from './providers/AuthorizationProvider';
-import {alertAndLog} from '../util/alertAndLog';
 import {publicKeyAtom} from './atoms/wallet';
 import {useAtom} from 'jotai';
 import SolendButton from './Button';
@@ -13,8 +11,6 @@ import colors from '../colors';
 import {formatAddress} from '@solendprotocol/solend-sdk';
 
 type Props = Readonly<ComponentProps<typeof Button>>;
-
-const WALLET_PREFIX_SUFFIX_LENGTH = 6;
 
 export default function ConnectButton(props: Props & {navigation: any}) {
   const {connect} = useAuthorization();

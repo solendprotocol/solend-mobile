@@ -1,12 +1,11 @@
 import React, {ReactElement, useState} from 'react';
 import BigNumber from 'bignumber.js';
-import {useAtom} from 'jotai';
-import {ActionType, ReserveType} from '@solendprotocol/solend-sdk';
-import {SelectedReserveType, rateLimiterAtom} from './atoms/pools';
+import {ActionType} from '@solendprotocol/solend-sdk';
+import {SelectedReserveType} from './atoms/pools';
 import {formatPercent, formatToken, formatUsd} from '../util/numberFormatter';
 import Typography from './Typography';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {Pressable, View, Linking, ScrollView} from 'react-native';
+import {Pressable, View, Linking, ScrollView, StyleSheet} from 'react-native';
 import Metric from './Metric';
 import Tooltip from 'rn-tooltip';
 import Clipboard from '@react-native-clipboard/clipboard';
@@ -201,9 +200,7 @@ function ReserveStats({
             ? 'flex bg-neutralAlt h-24 mt-4 mx-[-32px] px-8'
             : 'flex hidden'
         }
-        contentContainerStyle={{
-          paddingVertical: 8,
-        }}>
+        contentContainerStyle={styles.scroll}>
         <Metric
           row
           label="Current asset utilization"
@@ -699,3 +696,9 @@ function ReserveStats({
 }
 
 export default ReserveStats;
+
+const styles = StyleSheet.create({
+  scroll: {
+    paddingVertical: 8,
+  },
+});

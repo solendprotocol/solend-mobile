@@ -1,7 +1,7 @@
 import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import {Text} from 'react-native';
+import {StyleSheet, Text} from 'react-native';
 
 export const GradientText = ({
   colors,
@@ -20,8 +20,8 @@ export const GradientText = ({
           {...rest}
           style={[
             rest.style,
+            styles.font,
             {
-              fontFamily: 'IBMPlexMono-Regular',
               fontSize,
             },
           ]}
@@ -32,9 +32,8 @@ export const GradientText = ({
           {...rest}
           style={[
             rest.style,
+            styles.fontClear,
             {
-              opacity: 0,
-              fontFamily: 'IBMPlexMono-Regular',
               fontSize,
             },
           ]}
@@ -43,3 +42,13 @@ export const GradientText = ({
     </MaskedView>
   );
 };
+
+const styles = StyleSheet.create({
+  font: {
+    fontFamily: 'IBMPlexMono-Regular',
+  },
+  fontClear: {
+    opacity: 0,
+    fontFamily: 'IBMPlexMono-Regular',
+  },
+});

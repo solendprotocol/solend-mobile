@@ -1,17 +1,11 @@
 import {useAtom} from 'jotai';
-import {connectionAtom, selectedRpcAtom} from './components/atoms/settings';
-import {
-  ConnectionProvider,
-  RPC_ENDPOINT,
-} from './components/providers/ConnectionProvider';
-import {clusterApiUrl} from '@solana/web3.js';
-import React, {Suspense, useEffect, useState} from 'react';
-import {Button, SafeAreaView, StyleSheet, Text, View} from 'react-native';
+import {selectedRpcAtom} from './components/atoms/settings';
+import {ConnectionProvider} from './components/providers/ConnectionProvider';
+import React, {Suspense} from 'react';
+import {SafeAreaView} from 'react-native';
 import {AuthorizationProvider} from './components/providers/AuthorizationProvider';
 import {Header} from './components/Header';
-
 import MainScreen from './screens/MainScreen';
-
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {NavigationContainer} from '@react-navigation/native';
 import {AccountsModal} from './components/AccountsModal';

@@ -1,18 +1,5 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {
-  Button,
-  Dimensions,
-  FlatList,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import Modal from 'react-native-modal';
+import React, {useCallback, useRef, useState} from 'react';
+import {Pressable, TextInput, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import {useAuthorization} from '../components/providers/AuthorizationProvider';
 import {useConnection} from '../components/providers/ConnectionProvider';
@@ -23,13 +10,7 @@ import {
   rateLimiterAtom,
   selectedPoolAtom,
 } from '../components/atoms/pools';
-import {
-  ActionType,
-  ReserveType,
-  SolendActionCore,
-  U64_MAX,
-  titleCase,
-} from '@solendprotocol/solend-sdk';
+import {ActionType, titleCase} from '@solendprotocol/solend-sdk';
 import {
   Web3MobileWallet,
   transact,
@@ -37,7 +18,6 @@ import {
 import {Connection, Transaction} from '@solana/web3.js';
 import {alertAndLog} from '../util/alertAndLog';
 import Typography from '../components/Typography';
-import SplashScreen from 'react-native-splash-screen';
 import colors from '../colors';
 import BigNumber from 'bignumber.js';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -172,16 +152,16 @@ export default function TransactionModal({
   );
 
   const sendTransaction = useCallback(
-    async (txn: Transaction, connection: Connection) => {
+    async (txn: Transaction, connectionArg: Connection) => {
       let txnHash = '';
       const signedTransaction = await transact(
-        async (wallet: Web3MobileWallet) => {
+        async (walletArg: Web3MobileWallet) => {
           await Promise.all([
-            authorizeSession(wallet),
-            connection.getLatestBlockhash(),
+            authorizeSession(walletArg),
+            connectionArg.getLatestBlockhash(),
           ]);
 
-          const signedTransactions = await wallet.signTransactions({
+          const signedTransactions = await walletArg.signTransactions({
             transactions: [txn],
           });
 
@@ -208,7 +188,7 @@ export default function TransactionModal({
       }
       return txnHash;
     },
-    [authorizeSession, connection, transact, selectedReserve],
+    [authorizeSession, connection, signingInProgress],
   );
 
   const performAction = () => {
@@ -251,7 +231,7 @@ export default function TransactionModal({
         <Pressable
           className={`basis-1/4 flex justify-center items-center h-12 bg-neutralAlt ${
             selectedAction === 'deposit'
-              ? `border-t-2 border-primary bg-neutral`
+              ? 'border-t-2 border-primary bg-neutral'
               : 'border-t-2 border-neutralAlt'
           }`}
           onPress={() => handleSelectAction('deposit')}>
@@ -260,7 +240,7 @@ export default function TransactionModal({
         <Pressable
           className={`basis-1/4 flex justify-center items-center h-12 bg-neutralAlt ${
             selectedAction === 'borrow'
-              ? `border-t-2 border-primary bg-neutral`
+              ? 'border-t-2 border-primary bg-neutral'
               : 'border-t-2 border-neutralAlt'
           }`}
           onPress={() => handleSelectAction('borrow')}>
@@ -269,7 +249,7 @@ export default function TransactionModal({
         <Pressable
           className={`basis-1/4 flex justify-center items-center h-12 bg-neutralAlt ${
             selectedAction === 'withdraw'
-              ? `border-t-2 border-primary bg-neutral`
+              ? 'border-t-2 border-primary bg-neutral'
               : 'border-t-2 border-neutralAlt'
           }`}
           onPress={() => handleSelectAction('withdraw')}>
@@ -278,7 +258,7 @@ export default function TransactionModal({
         <Pressable
           className={`basis-1/4 flex justify-center items-center h-12 bg-neutralAlt ${
             selectedAction === 'repay'
-              ? `border-t-2 border-primary bg-neutral`
+              ? 'border-t-2 border-primary bg-neutral'
               : 'border-t-2 border-neutralAlt'
           }`}
           onPress={() => handleSelectAction('repay')}>

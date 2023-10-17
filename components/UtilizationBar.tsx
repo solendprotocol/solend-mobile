@@ -1,8 +1,7 @@
-import React, {ReactElement, useEffect, useState} from 'react';
+import React, {ReactElement} from 'react';
 import {useAtom} from 'jotai';
 import classNames from 'classnames';
 import BigNumber from 'bignumber.js';
-import {formatPercent, formatUsd} from '../util/numberFormatter';
 import {selectedObligationAtom} from './atoms/obligations';
 import {Pressable, View} from 'react-native';
 

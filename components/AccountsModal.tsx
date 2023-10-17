@@ -1,6 +1,5 @@
-import React, {Suspense, useMemo} from 'react';
-import BigNumber from 'bignumber.js';
-import {Pressable, StyleSheet, View} from 'react-native';
+import React, {Suspense} from 'react';
+import {StyleSheet, View} from 'react-native';
 import colors from '../colors';
 import AccountsContent from './AccountsContent';
 
