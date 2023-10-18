@@ -1,7 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {FlatList, Image, Pressable, View} from 'react-native';
 import {useAtom} from 'jotai';
-import {selectedPoolAtom, selectedPoolStateAtom} from '../components/atoms/pools';
+import {
+  selectedPoolAtom,
+  selectedPoolStateAtom,
+} from '../components/atoms/pools';
 import {U64_MAX} from '@solendprotocol/solend-sdk';
 import Typography from '../components/Typography';
 import Metric from '../components/Metric';
@@ -165,7 +168,7 @@ function MainScreen() {
                           {supplyConfig && (
                             <LinearGradient
                               colors={[colors.brand, colors.brandAlt]}
-                              className="absolute right-[-48px] bottom-0 ml-1 p-[1px] rounded-full border flex flex-row justify-center items-center">
+                              className="absolute right-[-42px] bottom-0 ml-1 p-[1px] rounded-full border flex flex-row justify-center items-center">
                               <View className="px-2 rounded-full bg-neutral borderflex flex-row justify-center items-center">
                                 <GradientText
                                   fontSize={10}
@@ -189,7 +192,7 @@ function MainScreen() {
                           {borrowConfig && (
                             <LinearGradient
                               colors={[colors.brand, colors.brandAlt]}
-                              className="absolute right-[-48px] bottom-0 ml-1 p-[1px] h-5 rounded-full border flex flex-row justify-center items-center">
+                              className="absolute right-[-42px] bottom-0 ml-1 p-[1px] h-5 rounded-full border flex flex-row justify-center items-center">
                               <View className="px-2 rounded-full bg-neutral borderflex flex-row justify-center items-center">
                                 <GradientText
                                   fontSize={10}
@@ -203,14 +206,14 @@ function MainScreen() {
                       }
                     />
                   </View>
-                  <View className="bg-neutralAlt px-2 py-1">
+                  <View className="bg-neutralAlt border-line border px-2 py-1">
                     <Metric
                       label="Total supply"
                       row
                       color={atSupplyLimit ? 'secondary' : undefined}
                       value={
                         <Typography level="caption">
-                          {formatToken(item.item.totalSupply.toString())}{' '}
+                          {formatToken(item.item.totalSupply.toString(), 2)}{' '}
                           {item.item.symbol ?? ''}
                         </Typography>
                       }
@@ -221,7 +224,7 @@ function MainScreen() {
                       color={atBorrowLimit ? 'secondary' : undefined}
                       value={
                         <Typography level="caption">
-                          {formatToken(item.item.totalBorrow.toString())}{' '}
+                          {formatToken(item.item.totalBorrow.toString(), 2)}{' '}
                           {item.item.symbol ?? ''}
                         </Typography>
                       }

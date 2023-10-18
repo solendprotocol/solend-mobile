@@ -178,7 +178,7 @@ export const selectedPoolAtom = atom(
     if (!usedAddress) {
       return;
     }
-    set(selectedPoolStateAtom, 'loading')
+    set(selectedPoolStateAtom, 'loading');
     const [connection, publicKey] = await Promise.all([
       get(connectionAtom),
       get(publicKeyAtom),
@@ -219,7 +219,7 @@ export const selectedPoolAtom = atom(
     }
 
     set(selectedPoolAddressAtom, usedAddress);
-    set(selectedPoolStateAtom, 'done')
+    set(selectedPoolStateAtom, 'done');
   },
 );
 

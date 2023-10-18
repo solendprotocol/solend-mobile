@@ -190,6 +190,7 @@ function AuthorizationProvider(props: {children: ReactNode}) {
         ]),
       ),
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

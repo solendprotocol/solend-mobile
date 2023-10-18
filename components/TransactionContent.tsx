@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {Pressable, TextInput, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import {useAuthorization} from '../components/providers/AuthorizationProvider';
@@ -10,7 +10,7 @@ import {
   rateLimiterAtom,
   selectedPoolAtom,
 } from '../components/atoms/pools';
-import {ActionType, titleCase} from '@solendprotocol/solend-sdk';
+import {ActionType, U64_MAX, titleCase} from '@solendprotocol/solend-sdk';
 import {
   Web3MobileWallet,
   transact,
@@ -78,7 +78,13 @@ export default function TransactionModal({
       return;
     }
     if (useUsd) {
-      setUsdAmount(value);
+      setUsdAmount(
+        value.length
+          ? value[value.length - 1] === '.'
+            ? value
+            : new BigNumber(value).decimalPlaces(2).toString()
+          : '',
+      );
       setAmount(
         value.length
           ? new BigNumber(value)
@@ -104,6 +110,13 @@ export default function TransactionModal({
       );
     }
   }
+
+  useEffect(() => {
+    if (useUsd && !BigNumber(usdAmount).isNaN()) {
+      setUsdAmount(new BigNumber(usdAmount).decimalPlaces(2).toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [useUsd, setUsdAmount]);
 
   function handleSelectAction(action: ActionType) {
     if (selectedAction !== action) {
@@ -191,6 +204,10 @@ export default function TransactionModal({
     [authorizeSession, connection, signingInProgress],
   );
 
+  const amountMax = config
+    .calculateMax(selectedReserve, wallet, selectedObligation, rateLimiter)
+    .toString();
+
   const performAction = () => {
     const reserveConfig = selectedPool?.reserves.find(
       r => r.mintAddress === selectedReserve?.mintAddress,
@@ -198,10 +215,11 @@ export default function TransactionModal({
     if (!publicKey || !selectedPool || !reserveConfig) {
       return;
     }
+    const useMax = new BigNumber(amount).isGreaterThanOrEqualTo(amountMax);
 
-    const amountNominal = new BigNumber(amount)
-      .shiftedBy(reserveConfig.decimals)
-      .toFixed(0);
+    const amountNominal = useMax
+      ? U64_MAX
+      : new BigNumber(amount).shiftedBy(reserveConfig.decimals).toFixed(0);
 
     return config.action(
       amountNominal,
@@ -222,7 +240,7 @@ export default function TransactionModal({
       : 'Enter an amount';
 
   return result ? (
-    <View className="p-16 h-2/4">
+    <View className="p-16 h-2/4 border-t-2 border-primary mx-[-3px]">
       <Result result={result} setResult={setResult} />
     </View>
   ) : (
@@ -273,16 +291,7 @@ export default function TransactionModal({
               if (!selectedReserve) {
                 return;
               }
-              setAmount(
-                config
-                  .calculateMax(
-                    selectedReserve,
-                    wallet,
-                    selectedObligation,
-                    rateLimiter,
-                  )
-                  .toString(),
-              );
+              setAmount(amountMax);
             }}>
             <Typography level="label">MAX</Typography>
           </Pressable>
@@ -307,14 +316,14 @@ export default function TransactionModal({
               value={useUsd ? usdAmount : amount}
               onChangeText={handleAmountChange}
               ref={inputEl}
-              caretHidden
+              // caretHidden
+              cursorColor={colors.secondary}
               className="text-primary"
               autoFocus
               allowFontScaling
               style={{
                 fontSize: 40 - 1.4 * ((amount ?? '').toString().length + 1),
               }}
-              placeholder="0"
               textAlign="center"
               placeholderTextColor={colors.secondary}
               keyboardType="numeric"
@@ -337,9 +346,7 @@ export default function TransactionModal({
             </Pressable>
           </View>
           <Pressable
-            onPress={() => {
-              setUseUsd(!useUsd);
-            }}
+            onPress={() => setUseUsd(!useUsd)}
             className="w-12 h-12 border border-line rounded-full flex justify-center items-center">
             <Typography>
               <Icon name="swap-vert" size={16} />

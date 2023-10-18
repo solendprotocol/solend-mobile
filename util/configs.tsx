@@ -289,7 +289,7 @@ export const supplyConfigs: ActionConfig = {
     return BigNumber.max(
       BigNumber.min(maxSuppliableFromWallet, supplyCapRemaining),
       new BigNumber(0),
-    ).decimalPlaces(reserve.decimals);
+    ).decimalPlaces(reserve.decimals, BigNumber.ROUND_DOWN);
   },
 };
 
@@ -486,7 +486,7 @@ export const borrowConfigs: ActionConfig = {
         reserveRateLimit,
       ),
       BigNumber(0),
-    ).decimalPlaces(reserve.decimals);
+    ).decimalPlaces(reserve.decimals, BigNumber.ROUND_DOWN);
   },
 };
 
@@ -683,7 +683,7 @@ export const withdrawConfigs: ActionConfig = {
         poolRateLimit,
       ),
       new BigNumber(0),
-    ).decimalPlaces(reserve.decimals);
+    ).decimalPlaces(reserve.decimals, BigNumber.ROUND_DOWN);
   },
 };
 
@@ -820,6 +820,6 @@ export const repayConfigs: ActionConfig = {
     return BigNumber.min(
       reserveBorrowedAmount.amount,
       maxRepayableFromWallet,
-    ).decimalPlaces(reserve.decimals);
+    ).decimalPlaces(reserve.decimals, BigNumber.ROUND_DOWN);
   },
 };

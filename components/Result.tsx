@@ -112,5 +112,5 @@ export default function Result({result, setResult}: ResultPropsType) {
     );
   }
 
-  return <View className="px-6 py-2">{overridePage}</View>;
+  return <View className="px-8 py-2">{overridePage}</View>;
 }
