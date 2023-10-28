@@ -1,4 +1,4 @@
-package com.solanamobile;
+package com.solend.lending;
 
 import android.os.Bundle;
 import com.facebook.react.ReactActivity;

@@ -93,9 +93,9 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace "com.solanamobile"
+    namespace "com.solend.lending"
     defaultConfig {
-        applicationId "com.solanamobile"
+        applicationId "com.solend.lending"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
