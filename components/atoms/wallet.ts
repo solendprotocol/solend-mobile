@@ -44,7 +44,8 @@ export const setPublicKeyAtom = atom(
         ),
       );
     }
-    set(loadObligationsAtom, true);
+
+    await set(loadObligationsAtom, true);
   },
 );
 

@@ -1,9 +1,6 @@
 import {PublicKey} from '@solana/web3.js';
 import {
-  Account as AuthorizedAccount,
-  AuthorizationResult,
   AuthorizeAPI,
-  AuthToken,
   Base64EncodedAddress,
   DeauthorizeAPI,
   ReauthorizeAPI,
@@ -33,50 +30,7 @@ import {switchboardAtom} from '../atoms/settings';
 import {loadable} from 'jotai/utils';
 import {loadObligationsAtom} from '../atoms/obligations';
 import {ActionType} from '@solendprotocol/solend-sdk';
-
-export type Account = Readonly<{
-  address: Base64EncodedAddress;
-  label?: string;
-  publicKey: PublicKey;
-}>;
-
-type Authorization = Readonly<{
-  accounts: Account[];
-  authToken: AuthToken;
-  selectedAccount: Account;
-}>;
-
-function getAccountFromAuthorizedAccount(account: AuthorizedAccount): Account {
-  return {
-    ...account,
-    publicKey: getPublicKeyFromAddress(account.address),
-  };
-}
-
-function getAuthorizationFromAuthorizationResult(
-  authorizationResult: AuthorizationResult,
-  previouslySelectedAccount?: Account,
-): Authorization {
-  let selectedAccount: Account;
-  if (
-    // We have yet to select an account.
-    previouslySelectedAccount == null ||
-    // The previously selected account is no longer in the set of authorized addresses.
-    !authorizationResult.accounts.some(
-      ({address}) => address === previouslySelectedAccount.address,
-    )
-  ) {
-    const firstAccount = authorizationResult.accounts[0];
-    selectedAccount = getAccountFromAuthorizedAccount(firstAccount);
-  } else {
-    selectedAccount = previouslySelectedAccount;
-  }
-  return {
-    accounts: authorizationResult.accounts.map(getAccountFromAuthorizedAccount),
-    authToken: authorizationResult.auth_token,
-    selectedAccount,
-  };
-}
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
   const publicKeyByteArray = toUint8Array(address);
@@ -84,27 +38,23 @@ function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
 }
 
 export const APP_IDENTITY = {
-  name: 'React Native dApp',
-  uri: 'https://solanamobile.com',
-  icon: 'favicon.ico',
+  name: 'Solend Mobile',
+  uri: 'https://solend.fi/',
+  icon: 'icon.png',
 };
 
 export interface AuthorizationProviderContext {
-  accounts: Account[] | null;
-  authorizeSession: (wallet: AuthorizeAPI & ReauthorizeAPI) => Promise<Account>;
+  authorizeSession: (wallet: AuthorizeAPI & ReauthorizeAPI) => void;
   deauthorizeSession: (wallet: DeauthorizeAPI) => void;
   connect: () => void;
-  onChangeAccount: (nextSelectedAccount: Account) => void;
   selectedReserve: SelectedReserveType | null;
   setSelectedReserve: (reserve: SelectedReserveType | null) => void;
   selectedAction: ActionType;
   setSelectedAction: (reserve: ActionType) => void;
   loadAll: () => void;
-  selectedAccount: Account | null;
 }
 
 const AuthorizationContext = React.createContext<AuthorizationProviderContext>({
-  accounts: null,
   authorizeSession: (_wallet: AuthorizeAPI & ReauthorizeAPI) => {
     throw new Error('AuthorizationProvider not initialized');
   },
@@ -114,11 +64,7 @@ const AuthorizationContext = React.createContext<AuthorizationProviderContext>({
   connect: () => {
     throw new Error('AuthorizationProvider not initialized');
   },
-  onChangeAccount: (_nextSelectedAccount: Account) => {
-    throw new Error('AuthorizationProvider not initialized');
-  },
   loadAll: () => {},
-  selectedAccount: null,
   selectedReserve: null,
   setSelectedReserve: () => {},
   selectedAction: 'deposit',
@@ -139,9 +85,10 @@ function AuthorizationProvider(props: {children: ReactNode}) {
   const [publicKey] = useAtom(publicKeyAtom);
   const [config] = useAtom(configAtom);
   const [unqiueAssets] = useAtom(unqiueAssetsAtom);
-  const [authorization, setAuthorization] = useState<Authorization | null>(
-    null,
-  );
+  const [authorization, setAuthorization] = useState<{
+    publicKey: PublicKey;
+    authToken: string;
+  } | null>(null);
   const loadObligation = useSetAtom(loadObligationsAtom);
   const loadMetadata = useSetAtom(loadMetadataAtom);
 
@@ -168,12 +115,22 @@ function AuthorizationProvider(props: {children: ReactNode}) {
   ]);
 
   useEffect(() => {
-    setPublicKeyInAtom(
-      authorization?.selectedAccount?.publicKey.toBase58() ?? null,
-    );
-  }, [authorization?.selectedAccount?.publicKey, setPublicKeyInAtom]);
+    setPublicKeyInAtom(authorization?.publicKey.toBase58() ?? null);
+  }, [authorization?.publicKey, setPublicKeyInAtom]);
 
-  useEffect(() => {
+  async function onStart() {
+    const [cachedAuthToken, cachedBase64Address] = await Promise.all([
+      AsyncStorage.getItem('authToken'),
+      AsyncStorage.getItem('base64Address'),
+    ]);
+    if (cachedBase64Address && cachedAuthToken) {
+      const pubkeyAsByteArray = getPublicKeyFromAddress(cachedBase64Address);
+      setAuthorization({
+        publicKey: pubkeyAsByteArray,
+        authToken: cachedAuthToken,
+      });
+      await setPublicKeyInAtom(authorization?.publicKey.toBase58() ?? null);
+    }
     setSelectedPoolAddress('4UpD2fh7xH3VP9QQaXtsS1YY3bxzWhtfpks7FatyKvdY');
 
     setPools(
@@ -190,6 +147,10 @@ function AuthorizationProvider(props: {children: ReactNode}) {
         ]),
       ),
     );
+  }
+
+  useEffect(() => {
+    onStart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -199,19 +160,6 @@ function AuthorizationProvider(props: {children: ReactNode}) {
     }
   }, [unqiueAssets.length, loadMetadata]);
 
-  const handleAuthorizationResult = useCallback(
-    async (
-      authorizationResult: AuthorizationResult,
-    ): Promise<Authorization> => {
-      const nextAuthorization = getAuthorizationFromAuthorizationResult(
-        authorizationResult,
-        authorization?.selectedAccount,
-      );
-      await setAuthorization(nextAuthorization);
-      return nextAuthorization;
-    },
-    [authorization, setAuthorization],
-  );
   const authorizeSession = useCallback(
     async (wallet: AuthorizeAPI & ReauthorizeAPI) => {
       const authorizationResult = await (authorization
@@ -223,10 +171,17 @@ function AuthorizationProvider(props: {children: ReactNode}) {
             cluster: RPC_ENDPOINT,
             identity: APP_IDENTITY,
           }));
-      return (await handleAuthorizationResult(authorizationResult))
-        .selectedAccount;
+
+      const firstAccount = authorizationResult.accounts[0];
+      AsyncStorage.setItem('authToken', authorizationResult.auth_token);
+      AsyncStorage.setItem('base64Address', firstAccount.address);
+      setAuthorization({
+        authToken: authorizationResult.auth_token,
+        publicKey: getPublicKeyFromAddress(firstAccount.address),
+      });
+      return;
     },
-    [authorization, handleAuthorizationResult],
+    [authorization],
   );
 
   const connect = useCallback(async () => {
@@ -254,51 +209,30 @@ function AuthorizationProvider(props: {children: ReactNode}) {
         return;
       }
       await wallet.deauthorize({auth_token: authorization.authToken});
+      AsyncStorage.clear();
       setAuthorization(null);
     },
     [authorization, setAuthorization],
   );
-  const onChangeAccount = useCallback(
-    (nextSelectedAccount: Account) => {
-      setAuthorization(currentAuthorization => {
-        if (
-          !currentAuthorization?.accounts.some(
-            ({address}) => address === nextSelectedAccount.address,
-          )
-        ) {
-          throw new Error(
-            `${nextSelectedAccount.address} is not one of the available addresses`,
-          );
-        }
-        return {
-          ...currentAuthorization,
-          selectedAccount: nextSelectedAccount,
-        };
-      });
-    },
-    [setAuthorization],
-  );
+
   const value = useMemo(
     () => ({
-      accounts: authorization?.accounts ?? null,
+      selectedReserve,
+      selectedAction,
       authorizeSession,
       deauthorizeSession,
-      connect,
-      onChangeAccount,
-      selectedReserve,
       setSelectedReserve,
-      selectedAction,
       setSelectedAction,
+      connect,
       loadAll,
-      selectedAccount: authorization?.selectedAccount ?? null,
     }),
     [
-      authorization,
       selectedReserve,
       selectedAction,
       authorizeSession,
       deauthorizeSession,
-      onChangeAccount,
+      setSelectedReserve,
+      setSelectedAction,
       connect,
       loadAll,
     ],

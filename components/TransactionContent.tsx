@@ -77,12 +77,25 @@ export default function TransactionModal({
     if (value.length && BigNumber(value).isNaN()) {
       return;
     }
+
+    const splitNum = value.split('.');
+    const leaveUnparsedCondition = Boolean(
+      splitNum[1] !== undefined && splitNum[1].split('').every(c => c === '0'),
+    );
+    const rebuiltValue =
+      splitNum[0] +
+      (value.indexOf('.') !== -1
+        ? `.${splitNum[1]?.substring(0, useUsd ? 2 : selectedReserve.decimals)}`
+        : '');
+
     if (useUsd) {
       setUsdAmount(
         value.length
-          ? value[value.length - 1] === '.'
-            ? value
-            : new BigNumber(value).decimalPlaces(2).toString()
+          ? leaveUnparsedCondition
+            ? rebuiltValue
+            : new BigNumber(value)
+                .decimalPlaces(2, BigNumber.ROUND_DOWN)
+                .toString()
           : '',
       );
       setAmount(
@@ -96,10 +109,10 @@ export default function TransactionModal({
     } else {
       setAmount(
         value.length
-          ? value[value.length - 1] === '.'
-            ? value
+          ? leaveUnparsedCondition
+            ? rebuiltValue
             : new BigNumber(value)
-                .decimalPlaces(selectedReserve.decimals)
+                .decimalPlaces(selectedReserve.decimals, BigNumber.ROUND_DOWN)
                 .toString()
           : '',
       );

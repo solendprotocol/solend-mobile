@@ -8,7 +8,7 @@ import Typography from './Typography';
 import {useAtom} from 'jotai';
 import {selectedPoolAtom} from './atoms/pools';
 import {formatAddress} from '@solendprotocol/solend-sdk';
-import {selectedObligationAtom} from './atoms/obligations';
+import {selectedObligationAddressAtom, selectedObligationAtom} from './atoms/obligations';
 import {formatToken, formatUsd} from '../util/numberFormatter';
 import Metric from './Metric';
 import UtilizationBar from './UtilizationBar';
@@ -25,6 +25,7 @@ export default function AccountsContent({navigation}: {navigation: any}) {
   const {deauthorizeSession, connect, setSelectedReserve, setSelectedAction} =
     useAuthorization();
   const [selectedObligation] = useAtom(selectedObligationAtom);
+  const [selectedObligationAddress] = useAtom(selectedObligationAddressAtom);
 
   const walletContents = useMemo(
     () =>

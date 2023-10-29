@@ -70,7 +70,6 @@ export const loadObligationsAtom = atom(
           pubkey: new PublicKey(o),
           info: null,
         }));
-
     set(
       rawObligationsAtom,
       Object.fromEntries(
