@@ -98,8 +98,8 @@ android {
         applicationId "com.solend.lending"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 7
+        versionName "1.6"
     }
 
     splits {

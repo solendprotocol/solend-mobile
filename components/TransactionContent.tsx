@@ -253,7 +253,7 @@ export default function TransactionModal({
       : 'Enter an amount';
 
   return result ? (
-    <View className="p-16 h-2/4 border-t-2 border-primary mx-[-3px]">
+    <View className="p-16 h-2/4 border-t-2 border-primary w-full">
       <Result result={result} setResult={setResult} />
     </View>
   ) : (

@@ -40,7 +40,7 @@ function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
 export const APP_IDENTITY = {
   name: 'Solend Mobile',
   uri: 'https://solend.fi/',
-  icon: 'icon.png',
+  icon: 'favicon.ico',
 };
 
 export interface AuthorizationProviderContext {
