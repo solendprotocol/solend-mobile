@@ -8,9 +8,9 @@ export const PROGRAM_ID = getProgramId(ENVIRONMENT).toBase58();
 export const HOST_ATA = process.env.NEXT_PUBLIC_REACT_HOST_ATA;
 export const DEFAULT_RPC_ENDPOINTS = [
   {
-    name: 'RPCPool',
+    name: 'Helius',
     endpoint:
-      'https://solendf-solendf-67c7.rpcpool.com/cdb43ebf-28c5-477a-ad40-170977833508' as string,
+      'https://rpc.helius.xyz/?api-key=96d88c32-e147-4ef8-88b0-18c758ca69df' as string,
   },
   {
     name: 'Alchemy RPC',
